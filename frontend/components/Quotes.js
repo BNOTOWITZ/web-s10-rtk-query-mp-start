@@ -4,34 +4,29 @@ import {
   setHighlightedQuote,
   toggleVisibility,
 } from '../state/quotesSlice'
+import { useGetQuotesQuery, useToggleQuoteMutation, useDeleteQuoteMutation } from '../state/quotesApi'
 
 export default function Quotes() {
-  const quotes = [
-    {
-      id: 1,
-      quoteText: "Don't cry because it's over, smile because it happened.",
-      authorName: "Dr. Seuss",
-      apocryphal: true,
-    },
-    {
-      id: 2,
-      quoteText: "So many books, so little time.",
-      authorName: "Frank Zappa",
-      apocryphal: false,
-    },
-    {
-      id: 3,
-      quoteText: "Be yourself; everyone else is already taken.",
-      authorName: "Oscar Wilde",
-      apocryphal: false,
-    },
-  ]
   const displayAllQuotes = useSelector(st => st.quotesState.displayAllQuotes)
   const highlightedQuote = useSelector(st => st.quotesState.highlightedQuote)
   const dispatch = useDispatch()
+  
+  const { 
+    data: quotes,
+    isLoading: gettingQuotes,
+    isFetching: refreshingQuotes 
+  } = useGetQuotesQuery()
+  const [toggleQuote, {isLoading: togglingQuote}] = useToggleQuoteMutation()
+  const [deleteQuote, {isLoading: deletingQuote}] = useDeleteQuoteMutation()
+
   return (
     <div id="quotes">
-      <h3>Quotes</h3>
+      <h3>
+        Quotes
+        {(gettingQuotes || refreshingQuotes) && ' loading...'}
+        {(togglingQuote) && ' being toggled...'}
+        {(deletingQuote) && ' being deleting...'}
+      </h3>
       <div>
         {
           quotes?.filter(qt => {
@@ -45,9 +40,9 @@ export default function Quotes() {
                 <div>{qt.quoteText}</div>
                 <div>{qt.authorName}</div>
                 <div className="quote-buttons">
-                  <button>DELETE</button>
+                  <button onClick={() => deleteQuote(qt.id)}>DELETE</button>
                   <button onClick={() => dispatch(setHighlightedQuote(qt.id))}>HIGHLIGHT</button>
-                  <button>FAKE</button>
+                  <button onClick={() => toggleQuote({ id:qt.id, quote:{apocryphal:!qt.apocryphal} })}>FAKE</button>
                 </div>
               </div>
             ))
